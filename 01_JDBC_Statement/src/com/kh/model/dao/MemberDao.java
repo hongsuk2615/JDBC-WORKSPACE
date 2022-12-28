@@ -207,12 +207,12 @@ public class MemberDao {
 			e1.printStackTrace();
 		}
 		
-		// 2) Connection 객체 생성 -> db와 연결시키겠다
-		// 3) Statement 객체 생성
-		//4,5) 
-		try (Connection conn = DriverManager.getConnection(URL, SERVER_ID, SERVER_PWD);
-			 Statement stmt = conn.createStatement();
-			 ResultSet rset = stmt.executeQuery(sql)) {			
+		
+		
+		
+		try (Connection conn = DriverManager.getConnection(URL, SERVER_ID, SERVER_PWD); // 2) Connection 객체 생성 -> db와 연결시키겠다
+			 Statement stmt = conn.createStatement(); // 3) Statement 객체 생성
+			 ResultSet rset = stmt.executeQuery(sql)) {	//4,5) DB에 완성된 SQL문을 전달하면서 실행 후 결과 받기		
 			
 			//6_1) 현재 조회결과가 담긴 ResultSet에서 한행씩 뽑아서 vo객체에 담기
 			// rset.next() : 커서를 한줄 아래로 옮겨주고 해당행이 존재할 경우 true, 아니면 false를 반환해주는 메서드

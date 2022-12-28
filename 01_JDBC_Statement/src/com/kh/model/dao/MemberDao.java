@@ -19,7 +19,7 @@ import com.kh.model.vo.Member;
  */
 public class MemberDao {
 	/*
-	 * JDMC 용 객체.
+	 * JDBC 용 객체.
 	 * - Connection : DB와의 연결정보를 담고 있는 객체(IP주소, PORT번호, 계정명, 비밀번호)
 	 * - (Prepared) Statement : 해당 db에 SQL문을 전달하고 실행한 후 결과를 받아내는 객체
 	 * - ResultSet : 만일 실행한 SQL문이 SELECT문일 경우 조회된 결과들이 담겨있는 객체
@@ -242,10 +242,8 @@ public class MemberDao {
 				list.add(m);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		return list;
 	}
 	

@@ -3,6 +3,7 @@ package com.kh.controller;
 import java.util.ArrayList;
 
 import com.kh.model.dao.MemberDao;
+import com.kh.model.service.MemberService;
 import com.kh.model.vo.Member;
 import com.kh.view.MemberView;
 
@@ -20,7 +21,7 @@ public class MemberController {
 		Member m = new Member(userId, userPwd, userName, gender, age, email, phone, address, hobby);
 
 		// 2. Dao의 insertMember 메서드 호출
-		int result = new MemberDao().insertMember(m);
+		int result = new MemberService().insertMember(m);
 
 		// 3. result 결과값에 따라서 사용자가 보게될 화면 지정
 		if (result > 0) { // 삽입된 행의 갯수가 1개이상 -> 성공
@@ -43,7 +44,7 @@ public class MemberController {
 		// SELECT -> ResultSet -> ArrayList<Member>
 
 		// ArrayList<Member> list = new ArrayList<>();
-		ArrayList<Member> list = new MemberDao().selectAll();
+		ArrayList<Member> list = new MemberService().selectAll();
 
 		// 조회결과가 있는지 없는지 판단 후 사용자가 보게될 view 화면 지정.
 		if (list.isEmpty()) { // 텅빈 리스트 반환 -> 조회결과가 없다.
@@ -63,7 +64,7 @@ public class MemberController {
 	public void selectByUserId(String userId) {
 		// 결과값을 담을 변수
 		// SELECT -> ResultSet -> Member
-		Member member = new MemberDao().selectByUserId(userId);
+		Member member = new MemberService().selectByUserId(userId);
 		if (member == null) { // 텅빈 리스트 반환 -> 조회결과가 없다.
 			new MemberView().displayNodata(userId + "에 해당하는 검색결과가 없습니다.");
 		} else {
@@ -77,7 +78,7 @@ public class MemberController {
 		// SELECT -> ResultSet -> ArrayList<Member>
 
 		// ArrayList<Member> list = new ArrayList<>();
-		ArrayList<Member> list = new MemberDao().selectByUserName(keyword);
+		ArrayList<Member> list = new MemberService().selectByUserName(keyword);
 
 		// 조회결과가 있는지 없는지 판단 후 사용자가 보게될 view 화면 지정.
 		if (list.isEmpty()) { // 텅빈 리스트 반환 -> 조회결과가 없다.
@@ -103,7 +104,7 @@ public class MemberController {
 		member.setEmail(newEmail);
 		member.setPhone(newPhone);
 		member.setAddress(newAddress);
-		int result = new MemberDao().updateMember(member);
+		int result = new MemberService().updateMember(member);
 		
 		
 		if (result > 0) { // 삽입된 행의 갯수가 1개이상 -> 성공			
@@ -119,7 +120,7 @@ public class MemberController {
 	 */
 	public void deleteMember(String userId) {
 		
-		int result = new MemberDao().deleteMember(userId);
+		int result = new MemberService().deleteMember(userId);
 		
 		if (result > 0) { // 삽입된 행의 갯수가 1개이상 -> 성공			
 			System.out.println("회원탈퇴 성공");

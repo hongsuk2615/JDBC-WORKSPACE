@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import com.kh.common.JDBCTemplate;
 import com.kh.model.vo.Member;
 
 /*
@@ -65,22 +66,16 @@ public class MemberDao {
 	 * Statement 특징 : 완성된 SQL문을 실행할 수 있는 객체.
 	 */
 
-	private final String JDBC_DRIVER = "oracle.jdbc.driver.OracleDriver";
-	private final String URL = "jdbc:oracle:thin:@localhost:1521:orcl";
-	private final String SERVER_ID = "JDBC";
-	private final String SERVER_PWD = "JDBC";
-
 	/**
 	 * 사용자가 회원 추가 요청시 입력했던 값을 가지고 Insert문을 실행하는 메서드
 	 * 
 	 * @param m : 사용자가 입력했던 아이디부터 취미까지의 값을 가지고 만든 VO객체
 	 * @return : Insert문을 실행한 행의 갯수
 	 */
-	public int insertMember(Member m) {
+	public int insertMember(Connection conn, Member m) {
 		// Insert문 -> 처리된 행의 갯수 -> 트랜잭션 처리
 		// 0) 필요한 변수 세팅
 		int result = 0; // 처리된 결과(처리된 행의 갯수)를 담아줄 변수
-		Connection conn = null; // 접속된 db의 연결정보를 담는 변수
 		PreparedStatement pstmt = null; // SQL문 실행 후 결과를 받기위한 변수
 
 		// + 필요한 변수 : 실행시킬 SQL문(완성된 형태의 SQL문으로 만들기) => 끝에 세미콜론 절대 붙이지 말기.
@@ -92,13 +87,6 @@ public class MemberDao {
 				   + " VALUES(SEQ_USERNO.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, ?, DEFAULT)";
 
 		try {
-			// 1) JDBC 드라이버 등록.
-			Class.forName(JDBC_DRIVER);
-			// 오타가 있을 경우, ojdbc6.jar이 없을 경우 -> ClassNotFoundException이 발생함.
-
-			// 2) Connection 객체 생성 -> db와 연결시키겠다
-			conn = DriverManager.getConnection(URL, SERVER_ID, SERVER_PWD);
-
 			// 3_1) PreparedStatement 객체생성(sql문 미리넘겨줌)
 			pstmt = conn.prepareStatement(sql);
 			
@@ -116,23 +104,12 @@ public class MemberDao {
 			
 			//4,5)DB에 완성된 SQL문을 실행시키고 결과값 받기
 			result = pstmt.executeUpdate();
-			
-			//6_2) 트랜잭션 처리
-			if(result > 0 ) {
-				conn.commit();
-			}else {
-				conn.rollback();
-			}
-
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			// 7) 다쓴 자원 반납해주기 -> 생성된 순서의 역순으로
 			try {
 				pstmt.close();
-				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -147,7 +124,7 @@ public class MemberDao {
 	 * 
 	 * @return 조회결과 Member객체들을 ArrayList로 담아 반환
 	 */
-	public ArrayList<Member> selectAll() {
+	public ArrayList<Member> selectAll(Connection conn) {
 		// SELECT -> ResultSet => ArrayList로 반환
 
 		// 0) 필요한 변수들 세팅
@@ -198,14 +175,9 @@ public class MemberDao {
 		 */
 		// 1) JDBC 드라이버 등록.
 		// 오타가 있을 경우, ojdbc6.jar이 없을 경우 -> ClassNotFoundException이 발생함.
-		try {
-			Class.forName(JDBC_DRIVER);
-		} catch (ClassNotFoundException e1) {
-			e1.printStackTrace();
-		}
 
-		try (Connection conn = DriverManager.getConnection(URL, SERVER_ID, SERVER_PWD); // 2) Connection 객체 생성 -> db와 연결시키겠다
-			 PreparedStatement pstmt = conn.prepareStatement(sql); // 3) Statement 객체 생성
+
+		try (PreparedStatement pstmt = conn.prepareStatement(sql); // 3) Statement 객체 생성
 			 ResultSet rset = pstmt.executeQuery(sql)) { // 4,5) DB에 완성된 SQL문을 전달하면서 실행 후 결과 받기
 
 			// 6_1) 현재 조회결과가 담긴 ResultSet에서 한행씩 뽑아서 vo객체에 담기
@@ -241,7 +213,7 @@ public class MemberDao {
 		return list;
 	}
 
-	public Member selectByUserId(String userId) {
+	public Member selectByUserId(Connection conn, String userId) {
 
 		// 0) 필요한 변수 세팅
 		// 조회된 회원에 대한 정보를 담을 변수
@@ -254,14 +226,7 @@ public class MemberDao {
 		// 실행할 sql문(완성된 형태, 세미콜론x)
 		String sql = "SELECT * FROM MEMBER WHERE USERID = ?";
 
-		try {
-			Class.forName(JDBC_DRIVER);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		try (Connection conn = DriverManager.getConnection(URL, SERVER_ID, SERVER_PWD);
-				PreparedStatement pstmt = conn.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, userId);
 			try (ResultSet rset = pstmt.executeQuery()) {
 				if (rset.next()) {
@@ -277,19 +242,13 @@ public class MemberDao {
 		return member;
 	}
 	
-	public ArrayList<Member> selectByUserName(String keyword){
+	public ArrayList<Member> selectByUserName(Connection conn, String keyword){
 		
 		ArrayList<Member> list = new ArrayList<Member>();
 		//String sql = "SELECT * FROM MEMBER WHERE USERNAME LIKE '%' || ? || '%'";
 		String sql = "SELECT * FROM MEMBER WHERE USERNAME LIKE ?";
-		try {
-			Class.forName(JDBC_DRIVER);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
 		
-		try(Connection conn = DriverManager.getConnection(URL, SERVER_ID, SERVER_PWD);
-			PreparedStatement pstmt = conn.prepareStatement(sql)){
+		try(PreparedStatement pstmt = conn.prepareStatement(sql)){
 			pstmt.setString(1, "%"+keyword + "%");
 			try(ResultSet rset = pstmt.executeQuery()){
 				while(rset.next()) {
@@ -313,7 +272,7 @@ public class MemberDao {
 		return list;
 	}
 	
-	public int updateMember(Member member) {
+	public int updateMember(Connection conn, Member member) {
 		int result = 0;
 		/*
 		 * UPDATE MEMBER
@@ -330,27 +289,14 @@ public class MemberDao {
 				          +", PHONE = ?"
 				          +", ADDRESS = ?"
 				     +" WHERE USERID = ?";
-				
-		try {
-			Class.forName(JDBC_DRIVER);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-		try(Connection conn = DriverManager.getConnection(URL, SERVER_ID, SERVER_PWD);
-			PreparedStatement pstmt = conn.prepareStatement(sql)){
+
+		try(PreparedStatement pstmt = conn.prepareStatement(sql)){
 			pstmt.setString(1, member.getUserPwd());
 			pstmt.setString(2, member.getEmail());
 			pstmt.setString(3, member.getPhone());
 			pstmt.setString(4, member.getAddress());
 			pstmt.setString(5, member.getUserId());
 			result = pstmt.executeUpdate();
-			
-			if(result > 0 ) {
-				conn.commit();
-			}else {
-				conn.rollback();
-			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -358,7 +304,7 @@ public class MemberDao {
 		return result;
 	}
 	
-	public int deleteMember(String userId) {
+	public int deleteMember(Connection conn, String userId) {
 		int result = 0;
 		/*
 		 * DELETE FROM MEMBER
@@ -366,24 +312,10 @@ public class MemberDao {
 		 */
 		String sql = " DELETE FROM MEMBER"
 				    + " WHERE USERID = ?";
-		
-		try {
-			Class.forName(JDBC_DRIVER);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-		try(Connection conn = DriverManager.getConnection(URL, SERVER_ID, SERVER_PWD);
-			PreparedStatement stmt = conn.prepareStatement(sql)){
+
+		try(PreparedStatement stmt = conn.prepareStatement(sql)){
 			stmt.setString(1, userId);
 			result = stmt.executeUpdate();
-
-			if(result > 0) {
-				conn.commit();
-			}else {
-				conn.rollback();
-			}
-			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

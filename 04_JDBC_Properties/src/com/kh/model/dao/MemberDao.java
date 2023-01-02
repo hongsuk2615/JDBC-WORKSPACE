@@ -1,10 +1,14 @@
 package com.kh.model.dao;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Properties;
+
 import com.kh.model.vo.Member;
 
 /*
@@ -16,6 +20,21 @@ import com.kh.model.vo.Member;
  * 
  */
 public class MemberDao {
+	/*
+	 * 기존의 방식 : DAO 클래스에 사용자가 요청할때마다 실행해야하는 SQL문을 자바 소스코드 내에 명시적으로 작성
+	 *             => 정적 코딩방식, 하드코딩
+	 * 문제점 : SQL 구문을 수정해야 할 경우 자바 소스코드를 수정하는셈. 즉, 수정된 내용을 반영시키고자 한다면 프로그램을 재구동해야함.
+	 * 해결방식 : SQL문들을 별도로 관리하는 외부파일(.XML)을 만들어서 실시간으로 이 파일에 기록된 SQL문들을 동적으로 읽어들여서 실행
+	 *             => 동적 코딩방식
+	 */
+	
+	
+	
+	
+	
+	
+	
+	
 	/*
 	 * JDBC 용 객체. - Connection : DB와의 연결정보를 담고 있는 객체(IP주소, PORT번호, 계정명, 비밀번호) -
 	 * (Prepared) Statement : 해당 db에 SQL문을 전달하고 실행한 후 결과를 받아내는 객체 - ResultSet : 만일
@@ -61,6 +80,17 @@ public class MemberDao {
 	 * 
 	 * Statement 특징 : 완성된 SQL문을 실행할 수 있는 객체.
 	 */
+	private Properties prop = new Properties();
+	// new MemberDao().xxx(); 객체를 생성할때마다 MemberDao 객체의 생성자안에서 xml파일을 읽어들일 예정.
+	
+	public MemberDao() {
+		try {
+			prop.loadFromXML(new FileInputStream("resources/query.xml"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 
 	/**
 	 * 사용자가 회원 추가 요청시 입력했던 값을 가지고 Insert문을 실행하는 메서드
@@ -79,8 +109,9 @@ public class MemberDao {
 		 * INSERT INTO MEMBER VALUES (SEQ_USERNO.NEXTVAL , 'XXX', 'XXX', 'XXX', 'X', XX,
 		 * 'XX@XXXX', 'XXX', 'XXXX', 'XXX', DEFAULT)
 		 */
-		String sql = " INSERT INTO MEMBER"
-				   + " VALUES(SEQ_USERNO.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, ?, DEFAULT)";
+//		String sql = " INSERT INTO MEMBER"
+//				   + " VALUES(SEQ_USERNO.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, ?, DEFAULT)";
+		String sql = prop.getProperty("insertMember");
 
 		try {
 			// 3_1) PreparedStatement 객체생성(sql문 미리넘겨줌)
@@ -132,7 +163,8 @@ public class MemberDao {
 //		Statement stmt = null;
 //		ResultSet rset = null; //Select문이 실행된 조회결과값들이 처음에 실질적으로 담길 객체
 
-		String sql = "SELECT * FROM MEMBER";
+//		String sql = "SELECT * FROM MEMBER";
+		String sql = prop.getProperty("selectAll");
 
 		/*
 		 * 일반 try문 try { // 1) JDBC 드라이버 등록. Class.forName(JDBC_DRIVER); // 오타가 있을 경우,
@@ -220,7 +252,8 @@ public class MemberDao {
 //		ResultSet rset = null;
 
 		// 실행할 sql문(완성된 형태, 세미콜론x)
-		String sql = "SELECT * FROM MEMBER WHERE USERID = ?";
+//		String sql = "SELECT * FROM MEMBER WHERE USERID = ?";
+		String sql = prop.getProperty("selectByUserId");
 
 		try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, userId);
@@ -242,7 +275,8 @@ public class MemberDao {
 		
 		ArrayList<Member> list = new ArrayList<Member>();
 		//String sql = "SELECT * FROM MEMBER WHERE USERNAME LIKE '%' || ? || '%'";
-		String sql = "SELECT * FROM MEMBER WHERE USERNAME LIKE ?";
+//		String sql = "SELECT * FROM MEMBER WHERE USERNAME LIKE ?";
+		String sql = prop.getProperty("selectByUserName");
 		
 		try(PreparedStatement pstmt = conn.prepareStatement(sql)){
 			pstmt.setString(1, "%"+keyword + "%");
@@ -279,13 +313,13 @@ public class MemberDao {
  		 *  WHERE USERID = 'XXXX'  
  		 *  5
 		 */
-		String sql = " UPDATE MEMBER"
-				      + " SET USERPWD = ?"
-				          +", EMAIL = ?"
-				          +", PHONE = ?"
-				          +", ADDRESS = ?"
-				     +" WHERE USERID = ?";
-
+//		String sql = " UPDATE MEMBER"
+//				      + " SET USERPWD = ?"
+//				          +", EMAIL = ?"
+//				          +", PHONE = ?"
+//				          +", ADDRESS = ?"
+//				     +" WHERE USERID = ?";
+		String sql = prop.getProperty("updateMember");
 		try(PreparedStatement pstmt = conn.prepareStatement(sql)){
 			pstmt.setString(1, member.getUserPwd());
 			pstmt.setString(2, member.getEmail());
@@ -306,8 +340,9 @@ public class MemberDao {
 		 * DELETE FROM MEMBER
 		 *  WHERE USERID = 'XXXX'
 		 */
-		String sql = " DELETE FROM MEMBER"
-				    + " WHERE USERID = ?";
+//		String sql = " DELETE FROM MEMBER"
+//				    + " WHERE USERID = ?";
+		String sql = prop.getProperty("deleteMember");
 
 		try(PreparedStatement stmt = conn.prepareStatement(sql)){
 			stmt.setString(1, userId);
